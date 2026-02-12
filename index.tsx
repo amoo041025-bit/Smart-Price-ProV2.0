@@ -206,13 +206,13 @@ const App = () => {
                 <ArrowRight size={16} className="text-indigo-500" /> 공급가 산출 내역
               </h3>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
+            <div className="w-full">
+              <table className="w-full text-left table-auto">
                 <thead className="bg-white text-[11px] font-bold text-slate-400 uppercase tracking-tighter border-b border-slate-50">
                   <tr>
-                    <th className="px-7 py-4">구분 항목</th>
-                    <th className="px-7 py-4 text-right">공급가액 (Net)</th>
-                    <th className="px-7 py-4 text-right">VAT 포함 (최종)</th>
+                    <th className="px-7 py-4 whitespace-nowrap">구분 항목</th>
+                    <th className="px-7 py-4 text-right whitespace-nowrap">공급가액 (Net)</th>
+                    <th className="px-7 py-4 text-right whitespace-nowrap">VAT 포함 (최종)</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50 text-sm font-medium">

@@ -1,12 +1,11 @@
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import { 
   Calculator, RefreshCcw, ChevronRight, Target, Settings2, 
-  DollarSign, TrendingUp, Package, Percent, Plus, Info
+  DollarSign, TrendingUp, Package, Percent, Info
 } from 'lucide-react';
 
-// --- Types ---
+// --- 인터페이스 정의 (Types) ---
 interface PricingInput {
   productName: string;
   costPrice: number;
@@ -25,7 +24,7 @@ interface PricingResult {
   totalMargin: number;
 }
 
-// --- Utils & Pricing Engine ---
+// --- 유틸리티 및 계산 엔진 ---
 const roundTo10 = (v: number) => Math.round(v / 10) * 10;
 
 const formatCurrency = (v: number) => 
@@ -34,17 +33,10 @@ const formatCurrency = (v: number) =>
 const calculatePricing = (input: PricingInput): PricingResult => {
   const { costPrice, mainGpRate, wholesaleMargin, consumerMargin } = input;
   
-  // 1. 주거래공급가 (Net)
   const mainSupplyNet = roundTo10(costPrice / (1 - (mainGpRate / 100)));
   const mainSupplyVatIncl = mainSupplyNet * 1.1;
-  
-  // 2. 도매가 (기준가)
   const wholesalePrice = mainSupplyVatIncl / (1 - (wholesaleMargin / 100));
-  
-  // 3. 소비자가
   const consumerPrice = roundTo10(wholesalePrice / (1 - (consumerMargin / 100)));
-  
-  // 4. 직거래공급가
   const directSupplyNet = roundTo10(wholesalePrice / 1.1);
   const directSupplyVatIncl = directSupplyNet * 1.1;
 
@@ -66,11 +58,11 @@ const calculateGpFromTarget = (cost: number, target: number, wm: number, cm: num
   return mainSupplyNet > 0 ? (1 - (cost / mainSupplyNet)) * 100 : 0;
 };
 
-// --- Main Application Component ---
+// --- 메인 애플리케이션 컴포넌트 ---
 const App = () => {
   const [input, setInput] = useState<PricingInput>({
-    productName: '신규 전략 상품',
-    costPrice: 55000,
+    productName: '전략 신상품',
+    costPrice: 50000,
     mainGpRate: 35.0,
     wholesaleMargin: 15,
     consumerMargin: 20
@@ -80,15 +72,16 @@ const App = () => {
   const [result, setResult] = useState<PricingResult | null>(null);
   const isReverseSync = useRef(false);
 
+  // 결과 업데이트 함수
   const refresh = useCallback(() => {
     const res = calculatePricing(input);
     setResult(res);
     if (!isReverseSync.current) setTargetPrice(res.consumerPrice.toString());
   }, [input]);
 
+  // 초기 실행 및 로딩 해제
   useEffect(() => { 
     refresh(); 
-    // 로딩 화면 제거 (컴포넌트 마운트 후)
     if (typeof (window as any).hideLoading === 'function') {
       (window as any).hideLoading();
     }
@@ -123,17 +116,18 @@ const App = () => {
             <h1 className="text-lg font-bold tracking-tight">Smart-Price <span className="text-indigo-600">Pro</span></h1>
           </div>
           <div className="hidden sm:flex items-center gap-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-            GitHub Pages Deploy Version
+            GitHub Pages Live Version
           </div>
         </div>
       </header>
 
       <main className="max-w-6xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* 왼쪽 설정 영역 */}
         <div className="lg:col-span-5 space-y-6">
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-6">
             <div className="flex items-center gap-2 text-slate-800 border-b border-slate-100 pb-4">
               <Settings2 size={16} className="text-indigo-500" />
-              <h2 className="font-bold">시뮬레이션 설정</h2>
+              <h2 className="font-bold">가격 시뮬레이션</h2>
             </div>
 
             <div className="space-y-4">
@@ -146,10 +140,10 @@ const App = () => {
               </div>
 
               <div className="p-5 bg-slate-900 rounded-2xl shadow-lg transform transition-transform hover:scale-[1.01]">
-                <label className="text-[10px] font-black text-indigo-400 uppercase mb-2 flex items-center gap-1.5"><Target size={12} /> 시장가 기준 역산 (Reverse)</label>
+                <label className="text-[10px] font-black text-indigo-400 uppercase mb-2 flex items-center gap-1.5"><Target size={12} /> 목표 소비자가 입력 (역산)</label>
                 <div className="relative border-b border-slate-700 pb-1">
-                  <input type="number" placeholder="판매 희망가 입력" value={targetPrice} onChange={onTargetChange} className="w-full bg-transparent text-white text-2xl font-mono font-bold outline-none placeholder:text-slate-700" />
-                  <span className="absolute right-0 bottom-2 text-slate-500 font-bold text-xs uppercase">KRW</span>
+                  <input type="number" placeholder="예: 100000" value={targetPrice} onChange={onTargetChange} className="w-full bg-transparent text-white text-2xl font-mono font-bold outline-none placeholder:text-slate-700" />
+                  <span className="absolute right-0 bottom-2 text-slate-500 font-bold text-xs">KRW</span>
                 </div>
               </div>
 
@@ -163,7 +157,7 @@ const App = () => {
 
               <div className="space-y-3 pt-2">
                 <div className="flex justify-between items-center">
-                  <label className="text-[11px] font-bold text-slate-500 uppercase flex items-center gap-1.5"><Percent size={14} className="text-indigo-500" /> 주거래 GP</label>
+                  <label className="text-[11px] font-bold text-slate-500 uppercase flex items-center gap-1.5"><Percent size={14} className="text-indigo-500" /> 주거래 GP(마진율)</label>
                   <div className="bg-indigo-50 px-3 py-1 rounded-lg border border-indigo-100">
                     <input type="number" name="mainGpRate" step="0.1" value={input.mainGpRate} onChange={onInputChange} className="w-16 bg-transparent text-right font-mono font-black text-indigo-600 outline-none" />
                     <span className="ml-1 text-[10px] font-bold text-indigo-400">%</span>
@@ -174,54 +168,57 @@ const App = () => {
                 <div className="grid grid-cols-2 gap-4 pt-2">
                   <div className="space-y-1">
                     <label className="text-[10px] font-bold text-slate-400 uppercase">도매 마진 (%)</label>
-                    <input type="number" name="wholesaleMargin" value={input.wholesaleMargin} onChange={onInputChange} className="w-full px-3 py-2 bg-slate-50 border rounded-xl text-xs font-bold focus:ring-2 focus:ring-slate-300 outline-none" />
+                    <input type="number" name="wholesaleMargin" value={input.wholesaleMargin} onChange={onInputChange} className="w-full px-3 py-2 bg-slate-50 border rounded-xl text-xs font-bold" />
                   </div>
                   <div className="space-y-1">
                     <label className="text-[10px] font-bold text-slate-400 uppercase">소비자 마진 (%)</label>
-                    <input type="number" name="consumerMargin" value={input.consumerMargin} onChange={onInputChange} className="w-full px-3 py-2 bg-slate-50 border rounded-xl text-xs font-bold focus:ring-2 focus:ring-slate-300 outline-none" />
+                    <input type="number" name="consumerMargin" value={input.consumerMargin} onChange={onInputChange} className="w-full px-3 py-2 bg-slate-50 border rounded-xl text-xs font-bold" />
                   </div>
                 </div>
               </div>
             </div>
 
-            <button onClick={refresh} className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-500 font-bold rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95 border border-slate-200 text-xs"><RefreshCcw size={14} /> 강제 재계산</button>
+            <button onClick={refresh} className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-500 font-bold rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95 border border-slate-200 text-xs">
+              <RefreshCcw size={14} /> 시스템 재계산
+            </button>
           </div>
         </div>
 
+        {/* 오른쪽 결과 영역 */}
         <div className="lg:col-span-7 space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="bg-indigo-600 p-6 rounded-2xl shadow-xl text-white">
-              <div className="text-[10px] font-bold uppercase tracking-widest text-indigo-200 mb-1">최종 소비자가 (VAT 포함)</div>
+              <div className="text-[10px] font-bold uppercase tracking-widest text-indigo-200 mb-1 text-right">최종 소비자가</div>
               <div className="text-3xl font-black tracking-tight">{formatCurrency(result.consumerPrice)}</div>
-              <div className="mt-2 text-[10px] font-medium text-indigo-300/80 italic text-right">* 10원 단위 반올림</div>
+              <div className="mt-2 text-[10px] font-medium text-indigo-300/80 italic text-right">VAT 10% 포함</div>
             </div>
             <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
               <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">예상 총 마진액</div>
               <div className="text-2xl font-black text-slate-800 flex items-center gap-2"><TrendingUp size={22} className="text-emerald-500" />{formatCurrency(result.totalMargin)}</div>
-              <div className="mt-2 text-[10px] font-bold text-emerald-600">수익률: {( (result.totalMargin / result.consumerPrice) * 100).toFixed(1)}%</div>
+              <div className="mt-2 text-[10px] font-bold text-emerald-600">마진율: {( (result.totalMargin / result.consumerPrice) * 100).toFixed(1)}%</div>
             </div>
           </div>
 
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden text-sm">
-            <div className="px-6 py-4 border-b border-slate-100 font-bold text-slate-800 flex items-center gap-2"><ChevronRight size={16} className="text-indigo-500" /> 가격 구성 상세 내역</div>
+            <div className="px-6 py-4 border-b border-slate-100 font-bold text-slate-800 flex items-center gap-2"><ChevronRight size={16} className="text-indigo-500" /> 공급가 산출 리스트</div>
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead className="bg-slate-50/50 text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
-                  <tr><th className="px-6 py-3">항목</th><th className="px-6 py-3 text-right">Net</th><th className="px-6 py-3 text-right">최종 (VAT 포함)</th></tr>
+                  <tr><th className="px-6 py-3">항목</th><th className="px-6 py-3 text-right">Net (공급가)</th><th className="px-6 py-3 text-right">VAT 포함</th></tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
                   <tr>
-                    <td className="px-6 py-4 text-slate-500 italic">매입 원가</td>
+                    <td className="px-6 py-4 text-slate-500">매입 원가</td>
                     <td className="px-6 py-4 text-right font-mono text-slate-400">{formatCurrency(input.costPrice)}</td>
                     <td className="px-6 py-4 text-right text-slate-300">-</td>
                   </tr>
                   <tr className="bg-indigo-50/30">
-                    <td className="px-6 py-4 font-bold text-indigo-700">주거래 공급가</td>
+                    <td className="px-6 py-4 font-bold text-indigo-700 italic">주거래 공급가</td>
                     <td className="px-6 py-4 text-right font-mono text-indigo-400">{formatCurrency(result.mainSupplyNet)}</td>
-                    <td className="px-6 py-4 text-right font-mono font-bold text-indigo-700">{formatCurrency(result.mainSupplyVatIncl)}</td>
+                    <td className="px-6 py-4 text-right font-mono font-bold text-indigo-700 underline decoration-indigo-200 decoration-2">{formatCurrency(result.mainSupplyVatIncl)}</td>
                   </tr>
                   <tr>
-                    <td className="px-6 py-4 text-slate-600">도매 공급가 (입점)</td>
+                    <td className="px-6 py-4 text-slate-600">도매 공급가</td>
                     <td className="px-6 py-4 text-right text-slate-300 font-mono">-</td>
                     <td className="px-6 py-4 text-right font-mono font-bold text-slate-800">{formatCurrency(result.wholesalePrice)}</td>
                   </tr>
@@ -238,9 +235,9 @@ const App = () => {
           <div className="bg-indigo-50/50 p-5 rounded-2xl border border-indigo-100 flex gap-4">
             <Info className="text-indigo-500 shrink-0 mt-0.5" size={18} />
             <div className="space-y-1">
-              <h4 className="text-[11px] font-black text-indigo-600 uppercase">Information</h4>
+              <h4 className="text-[11px] font-black text-indigo-600 uppercase tracking-wider">안내사항</h4>
               <p className="text-xs text-indigo-800 leading-relaxed font-medium">
-                본 시뮬레이션은 모든 공급가(Net) 기준 10원 단위 반올림을 수행하며, 최종 VAT 포함가는 정산 편의를 위해 반올림된 Net 금액의 1.1배로 계산됩니다.
+                모든 금액은 <span className="font-bold underline">10원 단위 반올림</span> 정책이 적용되었습니다. 부가세(VAT)는 반올림된 공급가액의 10%를 합산하여 산출하며, 최종 단가는 시장 거래 표준을 준수합니다.
               </p>
             </div>
           </div>
@@ -250,9 +247,6 @@ const App = () => {
   );
 };
 
-// --- Mount Application ---
-const container = document.getElementById('root');
-if (container) {
-  const root = createRoot(container);
-  root.render(<App />);
-}
+// --- 앱 마운트 ---
+const root = createRoot(document.getElementById('root')!);
+root.render(<App />);

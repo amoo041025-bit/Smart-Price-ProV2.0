@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ko">
   <head>
@@ -13,63 +12,70 @@
       body { font-family: 'Inter', 'Noto Sans KR', sans-serif; -webkit-font-smoothing: antialiased; }
       input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
       input[type=number] { -moz-appearance: textfield; }
-      #loading-overlay { position: fixed; inset: 0; background: white; display: flex; align-items: center; justify-content: center; z-index: 9999; transition: opacity 0.5s; }
+      #loading-overlay { 
+        position: fixed; inset: 0; background: #f8fafc; 
+        display: flex; flex-direction: column; align-items: center; justify-content: center; 
+        z-index: 9999; transition: opacity 0.5s ease-out; 
+      }
+      .spinner {
+        width: 40px; height: 40px; border: 4px solid #e2e8f0; border-top: 4px solid #4f46e5;
+        border-radius: 50%; animation: spin 1s linear infinite;
+      }
+      @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
-    <!-- Import Map for ESM modules -->
-    <script type="importmap">
+  <script type="importmap">
 {
   "imports": {
-    "react": "https://esm.sh/react@19.0.0",
-    "react-dom": "https://esm.sh/react-dom@19.0.0",
-    "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
-    "react/jsx-runtime": "https://esm.sh/react@19.0.0/jsx-runtime",
-    "lucide-react": "https://esm.sh/lucide-react@0.463.0?external=react",
+    "react": "https://esm.sh/react@^19.2.4",
     "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
     "react/": "https://esm.sh/react@^19.2.4/",
     "vite": "https://esm.sh/vite@^7.3.1",
-    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.4"
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.4",
+    "lucide-react": "https://esm.sh/lucide-react@^0.563.0"
   }
 }
 </script>
-  <link rel="stylesheet" href="/index.css">
+<link rel="stylesheet" href="/index.css">
 </head>
   <body class="bg-slate-50 text-slate-900">
-    <!-- 화면 로딩 표시 -->
+    <!-- 로딩 화면 (컴포넌트 로드 전까지 표시) -->
     <div id="loading-overlay">
-      <div class="text-center">
-        <div class="inline-block w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-        <p class="mt-4 text-sm font-bold text-slate-500 italic">시스템 준비 중...</p>
-      </div>
+      <div class="spinner"></div>
+      <p class="mt-4 text-sm font-bold text-slate-500 animate-pulse">시스템 최적화 중...</p>
+      <div id="error-display" class="hidden mt-6 p-4 bg-red-50 text-red-600 rounded-lg text-xs max-w-sm mx-4 border border-red-100"></div>
     </div>
 
     <div id="root"></div>
 
-    <!-- 오류 발생 시 안내 -->
-    <script>
-      window.onerror = function(msg, url, line) {
-        const overlay = document.getElementById('loading-overlay');
-        if (overlay) {
-          overlay.innerHTML = `<div class="p-6 bg-red-50 text-red-800 rounded-xl border border-red-100 max-w-md mx-4">
-            <h1 class="font-bold mb-2">앱 실행 오류</h1>
-            <p class="text-xs opacity-80">${msg}</p>
-            <p class="text-[10px] mt-4 text-red-400">브라우저 콘솔을 확인해 주세요.</p>
-          </div>`;
-        }
-        return false;
-      };
-    </script>
-
-    <!-- index.tsx 실행 (esm.sh/run을 통해 브라우저에서 직접 변환) -->
+    <!-- 브라우저에서 직접 TSX를 실행하기 위한 esm.sh/run 로더 -->
     <script type="module">
-      import { createRoot } from 'react-dom/client';
-      // 로딩 화면 제거 함수를 window에 등록
+      import { run } from 'https://esm.sh/run';
+      
+      // 오류 발생 시 로딩 화면에 표시
+      window.onerror = (msg) => {
+        const errEl = document.getElementById('error-display');
+        if (errEl) {
+          errEl.classList.remove('hidden');
+          errEl.innerText = '실행 오류: ' + msg;
+          document.querySelector('.spinner').style.display = 'none';
+        }
+      };
+
+      // 로딩 화면 제거 함수
       window.hideLoading = () => {
         const overlay = document.getElementById('loading-overlay');
-        if (overlay) overlay.style.opacity = '0';
-        setTimeout(() => overlay?.remove(), 500);
+        if (overlay) {
+          overlay.style.opacity = '0';
+          setTimeout(() => overlay.remove(), 500);
+        }
       };
+
+      // TSX 실행 시작
+      run();
     </script>
-    <script type="module" src="./index.tsx"></script>
+    
+    <!-- 실시간 변환 대상 파일 -->
+    <script type="text/tsx" src="./index.tsx"></script>
   <script type="module" src="/index.tsx"></script>
 </body>
 </html>

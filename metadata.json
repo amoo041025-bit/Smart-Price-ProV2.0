@@ -1,5 +1,6 @@
+
 {
-  "name": "Smart-Price Pro",
-  "description": "Professional Strategic Pricing Dashboard",
+  "name": "Smart-Price Pro V2.0 Standalone",
+  "description": "한 화면에서 모든 가격 시뮬레이션이 가능한 통합 이커머스 가격 산출 시스템",
   "requestFramePermissions": []
 }
